@@ -20,6 +20,7 @@ class CreateTicketsTable extends Migration
       $table->integer('bought_by_id')->unsigned()->nullable();
       $table->foreign('bought_by_id')->references('id')->on('persons');
 
+      $table->string('code');
       $table->decimal('price');
       $table->timestamps();
     });
