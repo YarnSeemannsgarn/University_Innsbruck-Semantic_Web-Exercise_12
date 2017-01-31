@@ -24,8 +24,16 @@ class Event extends Model
   /**
    * Get the addresse of the event.
    */
-  public function addresse()
+  public function address()
   {
-    return $this->hasOne('App\Addresse');
+    return $this->belongsTo('App\Address');
+  }
+
+  /**
+   * Get the available tickets of the event
+   */
+  public function availableTickets()
+  {
+    return $this->tickets()->where('bought_by_person_id', null)->get();
   }
 }
