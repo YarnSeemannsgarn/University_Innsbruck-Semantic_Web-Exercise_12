@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\User;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Input;
 
 class APIController extends Controller
 {
@@ -19,7 +18,7 @@ class APIController extends Controller
       "@type" => "SearchAction",
       "target" => array(
         "@type" => "EntryPoint",
-        "urlTemplate" => "http://localhost:8080/Ticketmaster/api/seach/?keyword={search_keyword}"
+        "urlTemplate" => "http://localhost:8000/api/search/?keyword={search_keyword}"
       ),
       "query-input" => array(
         "@type" => "PropertyValueSpecification",
@@ -27,6 +26,18 @@ class APIController extends Controller
         "valueRequired" => "http://schema.org/True"
       )
     );
+
     return response()->json($jsonArray, 200, [], JSON_UNESCAPED_SLASHES);
+  }
+
+  /**
+   * Search for events
+   *
+   * @return Response
+   */
+  public function search()
+  {
+    $keyword = Input::get('keyword');
+
   }
 }

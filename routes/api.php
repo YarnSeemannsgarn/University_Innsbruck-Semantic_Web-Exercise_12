@@ -14,3 +14,5 @@ use Illuminate\Http\Request;
 */
 
 Route::get('/entry', 'APIController@entry');
+Route::get('/search', 'APIController@search');
+
