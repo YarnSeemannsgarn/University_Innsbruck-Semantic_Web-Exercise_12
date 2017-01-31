@@ -15,12 +15,11 @@ class CreatePersonsTable extends Migration
   {
     Schema::create('persons', function (Blueprint $table) {
       $table->increments('id');
-      $table->integer('address_id')->unsigned()->nullable();
-      $table->foreign('address_id')->references('id')->on('addresses');
 
       $table->string('first_name');
       $table->string('last_name');
-      $table->integer('age');
+      $table->date('birth_date');
+      $table->string('email');
       $table->timestamps();
     });
   }

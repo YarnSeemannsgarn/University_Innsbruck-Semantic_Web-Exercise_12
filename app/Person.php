@@ -12,20 +12,4 @@ class Person extends Model
    * @var string
    */
   protected $table = 'persons';
-
-  /**
-   * Get the addresse of the person.
-   */
-  public function addresse()
-  {
-    return $this->hasOne('App\Addresse');
-  }
-
-  /**
-   * Get the tickets of the person.
-   */
-  public function tickets()
-  {
-    return $this->hasMany('App\Ticket');
-  }
 }

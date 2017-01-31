@@ -22,10 +22,10 @@ class Ticket extends Model
   }
 
   /**
-   * Get the event of the ticket.
+   * Get the order for the ticket.
    */
-  public function person()
+  public function order()
   {
-    return $this->belongsTo('App\Person');
+    return $this->hasOne('App\Order');
   }
 }

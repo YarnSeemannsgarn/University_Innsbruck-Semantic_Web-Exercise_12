@@ -17,8 +17,6 @@ class CreateTicketsTable extends Migration
       $table->increments('id');
       $table->integer('event_id')->unsigned();
       $table->foreign('event_id')->references('id')->on('events');
-      $table->integer('bought_by_person_id')->unsigned()->nullable();
-      $table->foreign('bought_by_person_id')->references('id')->on('persons');
 
       $table->string('code');
       $table->decimal('price');

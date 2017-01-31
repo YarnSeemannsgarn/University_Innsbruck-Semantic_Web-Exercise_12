@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Event;
+use App\Order;
+use App\Person;
+use App\Ticket;
 use DateTime;
 use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Request;
+use League\Flysystem\Exception;
 
 class APIController extends Controller
 {
@@ -50,6 +55,16 @@ class APIController extends Controller
       foreach ($event->availableTickets() as $availableTicket) {
         $offerArray = array(
           "@type" => "Offer",
+          "@id" => "http://localhost:8000/tickets/" . $availableTicket->id,
+          "itemOffered" => array(
+            "@type" => "Product",
+            "name" => "Ticket",
+            "additionalProperty" => array(
+              "@type" => "PropertyValue",
+              "name" => "code",
+              "value" => $availableTicket->code
+            )
+          ),
           "price" => $availableTicket->price,
           "priceCurrency" => "EUR",
           "acceptedPaymentMethod" => [
@@ -68,6 +83,16 @@ class APIController extends Controller
               "@type" => "Order",
               "orderDate-output" => "required"
             )
+          ),
+          "result" => array(
+            "@type" => "Order",
+            "@id-output" => "required",
+            "orderDate-ouput" => "required"
+          ),
+          "target:" => array(
+            "@type" => "EntryPoint",
+            "urlTemplate" => "http://localhost:8000/api/buy-ticket",
+            "httpMethod" => "POST"
           )
         );
         array_push($offersArray, $offerArray);
@@ -77,6 +102,7 @@ class APIController extends Controller
       $eventArray = array(
         "@context" => "http://schema.org",
         "@type" => "Event",
+        "@id" => "http://localhost:8000/events/" . $event->id,
         "name" => $event->name,
         "description" => $event->description,
         "url" => $event->url,
@@ -98,5 +124,60 @@ class APIController extends Controller
     }
 
     return response()->json($eventsArray, 200, [], JSON_UNESCAPED_SLASHES);
+  }
+
+  /**
+   * Buys ticket
+   *
+   * @return Response
+   */
+  public function buyTicket() {
+    $json = Input::get();
+    try {
+      $context = isset($json['@context']) ? $json['@context'] : "";
+      if(!isset($json['@type']) || $context . $json['@type'] != "http://schema.org/BuyAction")
+        throw new Exception("Request JSON is not of type schema.org/BuyAction");
+
+      if(!isset($json['agent']) ||
+        !isset($json['agent']['@type']) || $context . $json['agent']['@type'] != "http://schema.org/Person" ||
+        !isset($json['agent']['givenName']) ||
+        !isset($json['agent']['familyName']) ||
+        !isset($json['agent']['birthDate']) ||
+        !isset($json['agent']['email']))
+        throw new Exception("Agent not defined correctly");
+
+      if(!isset($json['object']) ||
+        !isset($json['object']['@type']) || $context . $json['object']['@type'] != "http://schema.org/Offer" ||
+        !isset($json['object']['@id']))
+        throw new Exception("Object of Action not set correctly");
+
+      $ticketId = $json['object']['@id'];
+      $ticket = Ticket::find($ticketId);
+      if (count($ticket->has('order')->get()) != 0)
+        throw new Exception("Ticket with id " . $ticketId . " was already bought");
+
+      $person = new Person();
+      $person->first_name = $json['agent']['givenName'];
+      $person->last_name = $json['agent']['familyName'];
+      $person->birth_date = $json['agent']['birthDate'];
+      $person->email = $json['agent']['email'];
+      $person->save();
+
+      $order = new Order();
+      $order->ticket_id = $ticketId;
+      $order->person_id = $person->id;
+      $order->save();
+
+      $jsonArray = array(
+        "@context" => "http://schema.org/",
+        "@type" => "Order",
+        "@id" => $order->id,
+        "orderDate" => date_format($order->created_at, DateTime::ISO8601)
+      );
+
+      return response()->json($jsonArray, 200, [], JSON_UNESCAPED_SLASHES);
+    } catch(\Exception $e) {
+      return response()->json('Error: ' . $e->getMessage(), 400, [], JSON_UNESCAPED_SLASHES);
+    }
   }
 }

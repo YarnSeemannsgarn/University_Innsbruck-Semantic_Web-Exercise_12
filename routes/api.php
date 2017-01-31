@@ -15,4 +15,4 @@ use Illuminate\Http\Request;
 
 Route::get('/entry', 'APIController@entry');
 Route::get('/search', 'APIController@search');
-
+Route::post('/buy-ticket', 'APIController@buyTicket');

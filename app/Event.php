@@ -34,6 +34,12 @@ class Event extends Model
    */
   public function availableTickets()
   {
-    return $this->tickets()->where('bought_by_person_id', null)->get();
+    $availableTickets = array();
+    foreach ($this->tickets()->get() as $ticket) {
+      if ($ticket->has('order')->get()) {
+        array_push($availableTickets, $ticket);
+      }
+    }
+    return $availableTickets;
   }
 }
