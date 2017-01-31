@@ -19,8 +19,9 @@ class CreateEventsTable extends Migration
       $table->foreign('addresse_id')->references('id')->on('addresses');
 
       $table->string('name');
+      $table->string('venue');
       $table->dateTime('start_date');
-      $table->dateTime('end_date');
+      $table->dateTime('end_date')->nullable();
       $table->timestamps();
     });
   }
