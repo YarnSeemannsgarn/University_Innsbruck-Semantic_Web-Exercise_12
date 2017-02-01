@@ -170,9 +170,12 @@ class APIController extends Controller
 
       $jsonArray = array(
         "@context" => "http://schema.org/",
-        "@type" => "Order",
-        "@id" => $order->id,
-        "orderDate" => date_format($order->created_at, DateTime::ISO8601)
+        "@type" => "BuyAction",
+        "actionStatus" => "CompletedActionStatus",
+        "result" => array(
+          "@type" => "Order",
+          "orderDate" => date_format($order->created_at, DateTime::ISO8601)
+        )
       );
 
       return response()->json($jsonArray, 200, [], JSON_UNESCAPED_SLASHES);

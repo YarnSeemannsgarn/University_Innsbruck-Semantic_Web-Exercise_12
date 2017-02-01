@@ -19,7 +19,7 @@ class CreateOrdersTable extends Migration
       $table->foreign('ticket_id')->references('id')->on('tickets');
       $table->integer('person_id')->unsigned()->unique();
       $table->foreign('person_id')->references('id')->on('persons');
-      
+
       $table->timestamps();
     });
   }
