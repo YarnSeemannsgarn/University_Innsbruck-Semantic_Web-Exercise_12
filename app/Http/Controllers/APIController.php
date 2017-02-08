@@ -183,6 +183,7 @@ class APIController extends Controller
           "object" => $json['object'],
           "result" => array(
             "@type" => "Order",
+            "@id" => "http://localhost:8000/orders/" . $order->id,
             "orderDate" => date_format($order->created_at, DateTime::ISO8601)
           )
         );
