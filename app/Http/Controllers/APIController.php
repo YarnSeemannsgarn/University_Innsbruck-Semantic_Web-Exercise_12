@@ -8,6 +8,7 @@ use App\Person;
 use App\Ticket;
 use DateTime;
 use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use League\Flysystem\Exception;
 
@@ -104,7 +105,7 @@ class APIController extends Controller
         "@type" => "Event",
         "@id" => "http://localhost:8000/events/" . $event->id,
         "name" => $event->name,
-        "description" => $event->description,
+        #"description" => $event->description,
         "url" => $event->url,
         "startDate" => date_format(date_create($event->start_date), DateTime::ISO8601),
         "endDate" => date_format(date_create($event->end_date), DateTime::ISO8601),
@@ -151,14 +152,16 @@ class APIController extends Controller
         !isset($json['object']['@id']))
         throw new Exception("Object of Action not set correctly");
 
-      $ticketId = $json['object']['@id'];
+      $explodedId = explode('/', $json['object']['@id']);
+      $ticketId = end($explodedId);
       $ticket = Ticket::find($ticketId);
       if (count($ticket->has('order')->get()) != 0) {
         $jsonArray = array(
           "@context" => "http://schema.org/",
           "@type" => "BuyAction",
           "actionStatus" => "FailedActionStatus",
-          "error" => "Ticket has been already bought"
+          "error" => "Ticket with id " . $json['object']['@id'] . " has been already bought",
+          "object" => $json['object']
         );
       } else {
         $person = new Person();
@@ -177,6 +180,7 @@ class APIController extends Controller
           "@context" => "http://schema.org/",
           "@type" => "BuyAction",
           "actionStatus" => "CompletedActionStatus",
+          "object" => $json['object'],
           "result" => array(
             "@type" => "Order",
             "orderDate" => date_format($order->created_at, DateTime::ISO8601)
