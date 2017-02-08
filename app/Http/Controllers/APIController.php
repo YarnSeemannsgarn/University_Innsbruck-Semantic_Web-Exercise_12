@@ -34,7 +34,7 @@ class APIController extends Controller
       )
     );
 
-    return response()->json($jsonArray, 200, [], JSON_UNESCAPED_SLASHES);
+    return response()->json($jsonArray, 200, [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
   }
 
   /**
@@ -123,7 +123,7 @@ class APIController extends Controller
       array_push($eventsArray, $eventArray);
     }
 
-    return response()->json($eventsArray, 200, [], JSON_UNESCAPED_SLASHES);
+    return response()->json($eventsArray, 200, [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
   }
 
   /**
@@ -153,34 +153,40 @@ class APIController extends Controller
 
       $ticketId = $json['object']['@id'];
       $ticket = Ticket::find($ticketId);
-      if (count($ticket->has('order')->get()) != 0)
-        throw new Exception("Ticket with id " . $ticketId . " was already bought");
+      if (count($ticket->has('order')->get()) != 0) {
+        $jsonArray = array(
+          "@context" => "http://schema.org/",
+          "@type" => "BuyAction",
+          "actionStatus" => "FailedActionStatus",
+          "error" => "Ticket has been already bought"
+        );
+      } else {
+        $person = new Person();
+        $person->first_name = $json['agent']['givenName'];
+        $person->last_name = $json['agent']['familyName'];
+        $person->birth_date = $json['agent']['birthDate'];
+        $person->email = $json['agent']['email'];
+        $person->save();
 
-      $person = new Person();
-      $person->first_name = $json['agent']['givenName'];
-      $person->last_name = $json['agent']['familyName'];
-      $person->birth_date = $json['agent']['birthDate'];
-      $person->email = $json['agent']['email'];
-      $person->save();
+        $order = new Order();
+        $order->ticket_id = $ticketId;
+        $order->person_id = $person->id;
+        $order->save();
 
-      $order = new Order();
-      $order->ticket_id = $ticketId;
-      $order->person_id = $person->id;
-      $order->save();
+        $jsonArray = array(
+          "@context" => "http://schema.org/",
+          "@type" => "BuyAction",
+          "actionStatus" => "CompletedActionStatus",
+          "result" => array(
+            "@type" => "Order",
+            "orderDate" => date_format($order->created_at, DateTime::ISO8601)
+          )
+        );
+      }
 
-      $jsonArray = array(
-        "@context" => "http://schema.org/",
-        "@type" => "BuyAction",
-        "actionStatus" => "CompletedActionStatus",
-        "result" => array(
-          "@type" => "Order",
-          "orderDate" => date_format($order->created_at, DateTime::ISO8601)
-        )
-      );
-
-      return response()->json($jsonArray, 200, [], JSON_UNESCAPED_SLASHES);
+      return response()->json($jsonArray, 200, [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     } catch(\Exception $e) {
-      return response()->json('Error: ' . $e->getMessage(), 400, [], JSON_UNESCAPED_SLASHES);
+      return response()->json('Error: ' . $e->getMessage(), 400, [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
   }
 }
